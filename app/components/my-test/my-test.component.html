@@ -1,4 +1,10 @@
-<slot></slot>
-<div cr-for="d in data">
-	Hello! My name is {{d.name}} and I am {{d.age}} years old.
+<div>
+	<slot></slot>
+	<div crFor="d in data">
+		Hello! My name is {{d.name}} and I am {{d.age}} years old.
+	</div>
+
+	<button crOn:click="changeValue()">
+		Update
+	</button>
 </div>

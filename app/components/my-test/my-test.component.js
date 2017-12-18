@@ -1,6 +1,6 @@
-import { Component } from '../../../src/decorators/component';
+import { CircularComponent } from '../../../src/decorators/circular-component.decorator';
 
-@Component({
+@CircularComponent({
 	selector: 'my-test',
 	templateUrl: './my-test.component.html',
 	styleUrl: './my-test.component.css',
@@ -9,7 +9,7 @@ import { Component } from '../../../src/decorators/component';
 export class MyTestComponent {
 	constructor() {
 		/** public properties */
-		this.name = this.getAttribute('name');
+		this.name = '';
 		this.data = [
 			{ 'id': 0, 'name': 'John Doe', age: 38, selected: true },
 			{ 'id': 1, 'name': 'Jane Doe', age: 38, selected: true },
@@ -20,5 +20,14 @@ export class MyTestComponent {
 			{ 'id': 6, 'name': 'Ezekiel Doe', age: 7, selected: true },
 			{ 'id': 7, 'name': 'Molly Doe', age: 6, selected: true }
 		];
+	}
+
+	changeValue() {
+		let name = prompt('Enter A Name');
+		this.data[0].name = name;
+	}
+
+	addValue() {
+		alert('Test');
 	}
 }

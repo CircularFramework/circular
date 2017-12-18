@@ -60,604 +60,133 @@
 /******/ 	__webpack_require__.p = "";
 /******/
 /******/ 	// Load entry module and return exports
-/******/ 	return __webpack_require__(__webpack_require__.s = 3);
+/******/ 	return __webpack_require__(__webpack_require__.s = 4);
 /******/ })
 /************************************************************************/
 /******/ ([
 /* 0 */
-/***/ (function(module, exports, __webpack_require__) {
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
 
-/* WEBPACK VAR INJECTION */(function(global, process) {// Copyright Joyent, Inc. and other Node contributors.
-//
-// Permission is hereby granted, free of charge, to any person obtaining a
-// copy of this software and associated documentation files (the
-// "Software"), to deal in the Software without restriction, including
-// without limitation the rights to use, copy, modify, merge, publish,
-// distribute, sublicense, and/or sell copies of the Software, and to permit
-// persons to whom the Software is furnished to do so, subject to the
-// following conditions:
-//
-// The above copyright notice and this permission notice shall be included
-// in all copies or substantial portions of the Software.
-//
-// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
-// OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
-// MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
-// NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM,
-// DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR
-// OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE
-// USE OR OTHER DEALINGS IN THE SOFTWARE.
-
-var formatRegExp = /%[sdj%]/g;
-exports.format = function(f) {
-  if (!isString(f)) {
-    var objects = [];
-    for (var i = 0; i < arguments.length; i++) {
-      objects.push(inspect(arguments[i]));
-    }
-    return objects.join(' ');
-  }
-
-  var i = 1;
-  var args = arguments;
-  var len = args.length;
-  var str = String(f).replace(formatRegExp, function(x) {
-    if (x === '%%') return '%';
-    if (i >= len) return x;
-    switch (x) {
-      case '%s': return String(args[i++]);
-      case '%d': return Number(args[i++]);
-      case '%j':
-        try {
-          return JSON.stringify(args[i++]);
-        } catch (_) {
-          return '[Circular]';
-        }
-      default:
-        return x;
-    }
-  });
-  for (var x = args[i]; i < len; x = args[++i]) {
-    if (isNull(x) || !isObject(x)) {
-      str += ' ' + x;
-    } else {
-      str += ' ' + inspect(x);
-    }
-  }
-  return str;
-};
-
-
-// Mark that a method should not be used.
-// Returns a modified function which warns once by default.
-// If --no-deprecation is set, then it is a no-op.
-exports.deprecate = function(fn, msg) {
-  // Allow for deprecating things in the process of starting up.
-  if (isUndefined(global.process)) {
-    return function() {
-      return exports.deprecate(fn, msg).apply(this, arguments);
-    };
-  }
-
-  if (process.noDeprecation === true) {
-    return fn;
-  }
-
-  var warned = false;
-  function deprecated() {
-    if (!warned) {
-      if (process.throwDeprecation) {
-        throw new Error(msg);
-      } else if (process.traceDeprecation) {
-        console.trace(msg);
-      } else {
-        console.error(msg);
-      }
-      warned = true;
-    }
-    return fn.apply(this, arguments);
-  }
-
-  return deprecated;
-};
-
-
-var debugs = {};
-var debugEnviron;
-exports.debuglog = function(set) {
-  if (isUndefined(debugEnviron))
-    debugEnviron = process.env.NODE_DEBUG || '';
-  set = set.toUpperCase();
-  if (!debugs[set]) {
-    if (new RegExp('\\b' + set + '\\b', 'i').test(debugEnviron)) {
-      var pid = process.pid;
-      debugs[set] = function() {
-        var msg = exports.format.apply(exports, arguments);
-        console.error('%s %d: %s', set, pid, msg);
-      };
-    } else {
-      debugs[set] = function() {};
-    }
-  }
-  return debugs[set];
-};
-
-
+"use strict";
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "a", function() { return Directive; });
 /**
- * Echos the value of a value. Trys to print the value out
- * in the best way possible given the different types.
- *
- * @param {Object} obj The object to print out.
- * @param {Object} opts Optional options object that alters the output.
+ * @class Directive
+ * Defines a directive that Templation will search for in the template and parse
+ * @param {string} selector The selector that will be used in the directive (ex: crFor)
+ * @param {function} parser The function that will be executed for the directive. The parser receives a reference to the directive, the effected element, and the associated data
  */
-/* legacy: obj, showHidden, depth, colors*/
-function inspect(obj, opts) {
-  // default options
-  var ctx = {
-    seen: [],
-    stylize: stylizeNoColor
-  };
-  // legacy...
-  if (arguments.length >= 3) ctx.depth = arguments[2];
-  if (arguments.length >= 4) ctx.colors = arguments[3];
-  if (isBoolean(opts)) {
-    // legacy...
-    ctx.showHidden = opts;
-  } else if (opts) {
-    // got an "options" object
-    exports._extend(ctx, opts);
-  }
-  // set default options
-  if (isUndefined(ctx.showHidden)) ctx.showHidden = false;
-  if (isUndefined(ctx.depth)) ctx.depth = 2;
-  if (isUndefined(ctx.colors)) ctx.colors = false;
-  if (isUndefined(ctx.customInspect)) ctx.customInspect = true;
-  if (ctx.colors) ctx.stylize = stylizeWithColor;
-  return formatValue(ctx, obj, ctx.depth);
-}
-exports.inspect = inspect;
+class Directive {
+	constructor(selector, parser) {
+		/** public properties */
 
+		/** @public {string} The selector name for the directive */
+		this.selector = selector;
+		
+		/** @public {function} The function that is executed for the directive */
+		this.parser = parser;
+	
+		/** @public {string[]} An array of sub selectors. Referenced by using a colon (:) after the main selector (ex: crOn:click) */
+		this.subSelectors = [];
+	
+		/** private properties */
 
-// http://en.wikipedia.org/wiki/ANSI_escape_code#graphics
-inspect.colors = {
-  'bold' : [1, 22],
-  'italic' : [3, 23],
-  'underline' : [4, 24],
-  'inverse' : [7, 27],
-  'white' : [37, 39],
-  'grey' : [90, 39],
-  'black' : [30, 39],
-  'blue' : [34, 39],
-  'cyan' : [36, 39],
-  'green' : [32, 39],
-  'magenta' : [35, 39],
-  'red' : [31, 39],
-  'yellow' : [33, 39]
-};
+		/** @private {number} A number indicating the order in which the directive should be processed */
+		let _order = 0;
+		this.setOrder = (order) => {
+			_order = order;
+			return this;
+		};
+		this.getOrder = () => { return _order; };
+		
+		/** @private {boolean} A boolean indicating if this directive should be processed before DOM insertion */
+		let _pre = true;
+		this.setPre = (pre) => {
+			_pre = pre;
+			return this;
+		};
+		this.isPre = () => { return _pre; };
 
-// Don't use 'blue' not visible on cmd.exe
-inspect.styles = {
-  'special': 'cyan',
-  'number': 'yellow',
-  'boolean': 'yellow',
-  'undefined': 'grey',
-  'null': 'bold',
-  'string': 'green',
-  'date': 'magenta',
-  // "name": intentionally not styling
-  'regexp': 'red'
-};
+		/** @private {boolean} A boolean indicating if this directive should be processed after DOM insertion */
+		let _post = true;
+		this.setPost = (post) => {
+			_post = post;
+			return this;
+		};
+		this.isPost = () => { return _post; };
+	}
 
+	/** public methods */
 
-function stylizeWithColor(str, styleType) {
-  var style = inspect.styles[styleType];
-
-  if (style) {
-    return '\u001b[' + inspect.colors[style][0] + 'm' + str +
-           '\u001b[' + inspect.colors[style][1] + 'm';
-  } else {
-    return str;
-  }
+	/**
+	 * @method Set the sub selectors
+	 * @param {string[]} An array of strings to function as sub selectors
+	 * @returns {Directive}
+	 */
+	setSubSelectors(subSelectors) {
+		this.subSelectors = subSelectors;
+		return this;
+	}
 }
 
+/** export Directive */
 
-function stylizeNoColor(str, styleType) {
-  return str;
-}
-
-
-function arrayToHash(array) {
-  var hash = {};
-
-  array.forEach(function(val, idx) {
-    hash[val] = true;
-  });
-
-  return hash;
-}
-
-
-function formatValue(ctx, value, recurseTimes) {
-  // Provide a hook for user-specified inspect functions.
-  // Check that value is an object with an inspect function on it
-  if (ctx.customInspect &&
-      value &&
-      isFunction(value.inspect) &&
-      // Filter out the util module, it's inspect function is special
-      value.inspect !== exports.inspect &&
-      // Also filter out any prototype objects using the circular check.
-      !(value.constructor && value.constructor.prototype === value)) {
-    var ret = value.inspect(recurseTimes, ctx);
-    if (!isString(ret)) {
-      ret = formatValue(ctx, ret, recurseTimes);
-    }
-    return ret;
-  }
-
-  // Primitive types cannot have properties
-  var primitive = formatPrimitive(ctx, value);
-  if (primitive) {
-    return primitive;
-  }
-
-  // Look up the keys of the object.
-  var keys = Object.keys(value);
-  var visibleKeys = arrayToHash(keys);
-
-  if (ctx.showHidden) {
-    keys = Object.getOwnPropertyNames(value);
-  }
-
-  // IE doesn't make error fields non-enumerable
-  // http://msdn.microsoft.com/en-us/library/ie/dww52sbt(v=vs.94).aspx
-  if (isError(value)
-      && (keys.indexOf('message') >= 0 || keys.indexOf('description') >= 0)) {
-    return formatError(value);
-  }
-
-  // Some type of object without properties can be shortcutted.
-  if (keys.length === 0) {
-    if (isFunction(value)) {
-      var name = value.name ? ': ' + value.name : '';
-      return ctx.stylize('[Function' + name + ']', 'special');
-    }
-    if (isRegExp(value)) {
-      return ctx.stylize(RegExp.prototype.toString.call(value), 'regexp');
-    }
-    if (isDate(value)) {
-      return ctx.stylize(Date.prototype.toString.call(value), 'date');
-    }
-    if (isError(value)) {
-      return formatError(value);
-    }
-  }
-
-  var base = '', array = false, braces = ['{', '}'];
-
-  // Make Array say that they are Array
-  if (isArray(value)) {
-    array = true;
-    braces = ['[', ']'];
-  }
-
-  // Make functions say that they are functions
-  if (isFunction(value)) {
-    var n = value.name ? ': ' + value.name : '';
-    base = ' [Function' + n + ']';
-  }
-
-  // Make RegExps say that they are RegExps
-  if (isRegExp(value)) {
-    base = ' ' + RegExp.prototype.toString.call(value);
-  }
-
-  // Make dates with properties first say the date
-  if (isDate(value)) {
-    base = ' ' + Date.prototype.toUTCString.call(value);
-  }
-
-  // Make error with message first say the error
-  if (isError(value)) {
-    base = ' ' + formatError(value);
-  }
-
-  if (keys.length === 0 && (!array || value.length == 0)) {
-    return braces[0] + base + braces[1];
-  }
-
-  if (recurseTimes < 0) {
-    if (isRegExp(value)) {
-      return ctx.stylize(RegExp.prototype.toString.call(value), 'regexp');
-    } else {
-      return ctx.stylize('[Object]', 'special');
-    }
-  }
-
-  ctx.seen.push(value);
-
-  var output;
-  if (array) {
-    output = formatArray(ctx, value, recurseTimes, visibleKeys, keys);
-  } else {
-    output = keys.map(function(key) {
-      return formatProperty(ctx, value, recurseTimes, visibleKeys, key, array);
-    });
-  }
-
-  ctx.seen.pop();
-
-  return reduceToSingleString(output, base, braces);
-}
-
-
-function formatPrimitive(ctx, value) {
-  if (isUndefined(value))
-    return ctx.stylize('undefined', 'undefined');
-  if (isString(value)) {
-    var simple = '\'' + JSON.stringify(value).replace(/^"|"$/g, '')
-                                             .replace(/'/g, "\\'")
-                                             .replace(/\\"/g, '"') + '\'';
-    return ctx.stylize(simple, 'string');
-  }
-  if (isNumber(value))
-    return ctx.stylize('' + value, 'number');
-  if (isBoolean(value))
-    return ctx.stylize('' + value, 'boolean');
-  // For some reason typeof null is "object", so special case here.
-  if (isNull(value))
-    return ctx.stylize('null', 'null');
-}
-
-
-function formatError(value) {
-  return '[' + Error.prototype.toString.call(value) + ']';
-}
-
-
-function formatArray(ctx, value, recurseTimes, visibleKeys, keys) {
-  var output = [];
-  for (var i = 0, l = value.length; i < l; ++i) {
-    if (hasOwnProperty(value, String(i))) {
-      output.push(formatProperty(ctx, value, recurseTimes, visibleKeys,
-          String(i), true));
-    } else {
-      output.push('');
-    }
-  }
-  keys.forEach(function(key) {
-    if (!key.match(/^\d+$/)) {
-      output.push(formatProperty(ctx, value, recurseTimes, visibleKeys,
-          key, true));
-    }
-  });
-  return output;
-}
-
-
-function formatProperty(ctx, value, recurseTimes, visibleKeys, key, array) {
-  var name, str, desc;
-  desc = Object.getOwnPropertyDescriptor(value, key) || { value: value[key] };
-  if (desc.get) {
-    if (desc.set) {
-      str = ctx.stylize('[Getter/Setter]', 'special');
-    } else {
-      str = ctx.stylize('[Getter]', 'special');
-    }
-  } else {
-    if (desc.set) {
-      str = ctx.stylize('[Setter]', 'special');
-    }
-  }
-  if (!hasOwnProperty(visibleKeys, key)) {
-    name = '[' + key + ']';
-  }
-  if (!str) {
-    if (ctx.seen.indexOf(desc.value) < 0) {
-      if (isNull(recurseTimes)) {
-        str = formatValue(ctx, desc.value, null);
-      } else {
-        str = formatValue(ctx, desc.value, recurseTimes - 1);
-      }
-      if (str.indexOf('\n') > -1) {
-        if (array) {
-          str = str.split('\n').map(function(line) {
-            return '  ' + line;
-          }).join('\n').substr(2);
-        } else {
-          str = '\n' + str.split('\n').map(function(line) {
-            return '   ' + line;
-          }).join('\n');
-        }
-      }
-    } else {
-      str = ctx.stylize('[Circular]', 'special');
-    }
-  }
-  if (isUndefined(name)) {
-    if (array && key.match(/^\d+$/)) {
-      return str;
-    }
-    name = JSON.stringify('' + key);
-    if (name.match(/^"([a-zA-Z_][a-zA-Z_0-9]*)"$/)) {
-      name = name.substr(1, name.length - 2);
-      name = ctx.stylize(name, 'name');
-    } else {
-      name = name.replace(/'/g, "\\'")
-                 .replace(/\\"/g, '"')
-                 .replace(/(^"|"$)/g, "'");
-      name = ctx.stylize(name, 'string');
-    }
-  }
-
-  return name + ': ' + str;
-}
-
-
-function reduceToSingleString(output, base, braces) {
-  var numLinesEst = 0;
-  var length = output.reduce(function(prev, cur) {
-    numLinesEst++;
-    if (cur.indexOf('\n') >= 0) numLinesEst++;
-    return prev + cur.replace(/\u001b\[\d\d?m/g, '').length + 1;
-  }, 0);
-
-  if (length > 60) {
-    return braces[0] +
-           (base === '' ? '' : base + '\n ') +
-           ' ' +
-           output.join(',\n  ') +
-           ' ' +
-           braces[1];
-  }
-
-  return braces[0] + base + ' ' + output.join(', ') + ' ' + braces[1];
-}
-
-
-// NOTE: These type checking functions intentionally don't use `instanceof`
-// because it is fragile and can be easily faked with `Object.create()`.
-function isArray(ar) {
-  return Array.isArray(ar);
-}
-exports.isArray = isArray;
-
-function isBoolean(arg) {
-  return typeof arg === 'boolean';
-}
-exports.isBoolean = isBoolean;
-
-function isNull(arg) {
-  return arg === null;
-}
-exports.isNull = isNull;
-
-function isNullOrUndefined(arg) {
-  return arg == null;
-}
-exports.isNullOrUndefined = isNullOrUndefined;
-
-function isNumber(arg) {
-  return typeof arg === 'number';
-}
-exports.isNumber = isNumber;
-
-function isString(arg) {
-  return typeof arg === 'string';
-}
-exports.isString = isString;
-
-function isSymbol(arg) {
-  return typeof arg === 'symbol';
-}
-exports.isSymbol = isSymbol;
-
-function isUndefined(arg) {
-  return arg === void 0;
-}
-exports.isUndefined = isUndefined;
-
-function isRegExp(re) {
-  return isObject(re) && objectToString(re) === '[object RegExp]';
-}
-exports.isRegExp = isRegExp;
-
-function isObject(arg) {
-  return typeof arg === 'object' && arg !== null;
-}
-exports.isObject = isObject;
-
-function isDate(d) {
-  return isObject(d) && objectToString(d) === '[object Date]';
-}
-exports.isDate = isDate;
-
-function isError(e) {
-  return isObject(e) &&
-      (objectToString(e) === '[object Error]' || e instanceof Error);
-}
-exports.isError = isError;
-
-function isFunction(arg) {
-  return typeof arg === 'function';
-}
-exports.isFunction = isFunction;
-
-function isPrimitive(arg) {
-  return arg === null ||
-         typeof arg === 'boolean' ||
-         typeof arg === 'number' ||
-         typeof arg === 'string' ||
-         typeof arg === 'symbol' ||  // ES6 symbol
-         typeof arg === 'undefined';
-}
-exports.isPrimitive = isPrimitive;
-
-exports.isBuffer = __webpack_require__(10);
-
-function objectToString(o) {
-  return Object.prototype.toString.call(o);
-}
-
-
-function pad(n) {
-  return n < 10 ? '0' + n.toString(10) : n.toString(10);
-}
-
-
-var months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep',
-              'Oct', 'Nov', 'Dec'];
-
-// 26 Feb 16:19:34
-function timestamp() {
-  var d = new Date();
-  var time = [pad(d.getHours()),
-              pad(d.getMinutes()),
-              pad(d.getSeconds())].join(':');
-  return [d.getDate(), months[d.getMonth()], time].join(' ');
-}
-
-
-// log is just a thin wrapper to console.log that prepends a timestamp
-exports.log = function() {
-  console.log('%s - %s', timestamp(), exports.format.apply(exports, arguments));
-};
-
-
-/**
- * Inherit the prototype methods from one constructor into another.
- *
- * The Function.prototype.inherits from lang.js rewritten as a standalone
- * function (not on Function.prototype). NOTE: If this file is to be loaded
- * during bootstrapping this function needs to be rewritten using some native
- * functions as prototype setup using normal JavaScript does not work as
- * expected during bootstrapping (see mirror.js in r114903).
- *
- * @param {function} ctor Constructor function which needs to inherit the
- *     prototype.
- * @param {function} superCtor Constructor function to inherit prototype from.
- */
-exports.inherits = __webpack_require__(11);
-
-exports._extend = function(origin, add) {
-  // Don't do anything if add isn't an object
-  if (!add || !isObject(add)) return origin;
-
-  var keys = Object.keys(add);
-  var i = keys.length;
-  while (i--) {
-    origin[keys[i]] = add[keys[i]];
-  }
-  return origin;
-};
-
-function hasOwnProperty(obj, prop) {
-  return Object.prototype.hasOwnProperty.call(obj, prop);
-}
-
-/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(8), __webpack_require__(9)))
 
 /***/ }),
 /* 1 */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "a", function() { return using; });
+/** user the passed object to execute the given code */
+function using(obj, code, ref, refData) {
+	/** replace html entities */
+	const decodingMap = [
+		{ entity: '&lt;', char: '<' },
+		{ entity: '&gt;', char: '>' },
+		{ entity: '&quot;', char: '"' },
+		{ entity: '&amp;', char: '&' },
+		{ entity: '&#10;', char: '\n' },
+		{ entity: '&#9;', char: '\t' }
+	];
+	decodingMap.forEach(m => {
+		code = code.replace(m.entity, m.char);
+	});
+
+	/** get the property and method names list */
+	let properties = Object.getOwnPropertyNames(obj);
+	let proto = Object.getPrototypeOf(obj);
+	let publicMethods = Object.getOwnPropertyNames(proto);
+
+	/** create list of private methods to remove */
+	let privateMethods = ['constructor', '__defineGetter__', '__defineSetter__', 'hasOwnProperty', '__lookupGetter__', '__lookupSetter__', 'isPrototypeOf', 'propertyIsEnumerable', 'toString', 'valueOf', '__proto__', 'toLocaleString'];
+	publicMethods.forEach(m => m.startsWith('_') ? privateMethods.push(m) : null);
+	privateMethods.forEach(rm => {
+		let index = publicMethods.indexOf(rm);
+		if (index > -1) publicMethods.splice(index, 1);
+	});
+
+	/** create a method string */
+	let methods = '';
+	publicMethods.forEach(m => {
+		methods += `let ${m} = obj.${m}.bind(obj);`;
+	});
+
+	/** create a function for executing the given code */
+	let withFunc = new Function('obj', ref, `
+		let { ${properties.join(', ')} } = obj;
+		${methods}
+		return (${code});
+	`).bind(obj);
+
+	/** execute the function */
+	return withFunc(obj, refData);
+}
+
+/** export the function */
+
+
+/***/ }),
+/* 2 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -669,11 +198,9 @@ Object.defineProperty(exports, "__esModule", {
 
 var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
 
-exports.Component = Component;
+exports.CircularComponent = CircularComponent;
 
-var _extendComponent = __webpack_require__(6);
-
-var _util = __webpack_require__(0);
+var _templation = __webpack_require__(7);
 
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
@@ -687,19 +214,20 @@ function _CustomElement() {
 
 ;
 Object.setPrototypeOf(_CustomElement.prototype, HTMLElement.prototype);
-Object.setPrototypeOf(_CustomElement, HTMLElement); /** get the component extender */
+Object.setPrototypeOf(_CustomElement, HTMLElement); /** import Templation */
 
-/** export the decorator */
-function Component(config) {
+/**
+ * CircularComponent
+ * A decorator that will create a new web component and attach the component class to it
+ * @param {object} config The component configuration object
+ */
+function CircularComponent(config) {
 	return function (component) {
-		/** extend the component */
-		(0, _extendComponent.extendComponent)(component);
+		/** create a CircularComponent class that extends the HTMLElement */
+		var CircularComponent = function (_CustomElement2) {
+			_inherits(CircularComponent, _CustomElement2);
 
-		/** create the class */
-		var componentEl = function (_CustomElement2) {
-			_inherits(componentEl, _CustomElement2);
-
-			_createClass(componentEl, null, [{
+			_createClass(CircularComponent, null, [{
 				key: 'observedAttributes',
 
 				/** static array of observed attributes */
@@ -711,61 +239,86 @@ function Component(config) {
 
 			}]);
 
-			function componentEl() {
-				_classCallCheck(this, componentEl);
+			function CircularComponent() {
+				_classCallCheck(this, CircularComponent);
 
-				/** attach the shadow dom */
-				var _this = _possibleConstructorReturn(this, (componentEl.__proto__ || Object.getPrototypeOf(componentEl)).call(this));
-				/** initialize the base class */
+				/** attach the shadown dom */
+				var _this = _possibleConstructorReturn(this, (CircularComponent.__proto__ || Object.getPrototypeOf(CircularComponent)).call(this));
+				/** initialize the HTMLElement base class */
 
 
 				_this.attachShadow({ mode: 'open' });
 
-				/** add reference to the component */
-				component.prototype.componentEl = _this;
-
-				/** set the template */
-				if (config.template && config.template !== null) {
-					component.prototype.template = config.template;
-				} else if (config.templateUrl && config.templateUrl !== null) {
-					component.prototype.template = config.templateUrl;
-				} else {
-					throw 'No template specified for component';
-				}
-
-				/** set styles */
-				if (config.styles && config.styles !== null) {
-					component.prototype.styles = config.styles;
-				} else if (config.styleUrl && config.styleUrl !== null) {
-					component.prototype.styles = config.styleUrl;
-				}
-
 				/** initialize the component and build */
 				_this.component = new component();
-				_this.component.build();
+				_this.build();
 				return _this;
 			}
 
 			/** respond to attribute changes */
 
 
-			_createClass(componentEl, [{
+			_createClass(CircularComponent, [{
 				key: 'attributeChangedCallback',
 				value: function attributeChangedCallback(attr, oldValue, newValue) {
-					console.log('Attribute "' + attr + '" updated from ' + oldValue + ' to ' + newValue);
+					/** check if the attribute exists on the component and update */
+					if (Object.keys(this.component).findIndex(function (a) {
+						return a === attr;
+					}) > -1) {
+						this.component[attr] = newValue;
+					}
+				}
+
+				/** build the component */
+
+			}, {
+				key: 'build',
+				value: function build() {
+					/** build the template */
+					var template = document.createElement('template');
+
+					/** set the template */
+					if (config.template && config.template !== null) {
+						template.innerHTML = config.template;
+					} else if (config.templateUrl && config.templateUrl !== null) {
+						template.innerHTML = config.templateUrl;
+					} else {
+						throw 'No template specified for component';
+					}
+
+					/** run the templation engine */
+					var templation = new _templation.Templation();
+					var compiler = templation.compile(this.shadowRoot, template, this.component);
+					compiler.render();
+
+					/** set styles */
+					var styles = null;
+					if (config.styles && config.styles !== null) {
+						styles = config.styles;
+					} else if (config.styleUrl && config.styleUrl !== null) {
+						styles = config.styleUrl;
+					}
+					if (styles !== null) {
+						/** create the styles node and attach to shadowRoot */
+						var stylesNode = document.createElement('style');
+						stylesNode.innerText = styles;
+						this.shadowRoot.appendChild(stylesNode);
+					}
 				}
 			}]);
 
-			return componentEl;
+			return CircularComponent;
 		}(_CustomElement);
 
 		/** register the custom component */
-		customElements.define(config.selector, componentEl);
+
+
+		customElements.define(config.selector, CircularComponent);
 	};
 }
 
 /***/ }),
-/* 2 */
+/* 3 */
 /***/ (function(module, exports) {
 
 /*
@@ -847,20 +400,20 @@ function toComment(sourceMap) {
 
 
 /***/ }),
-/* 3 */
+/* 4 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
 
-var _index = __webpack_require__(4);
+var _index = __webpack_require__(5);
 
 var Components = _interopRequireWildcard(_index);
 
 function _interopRequireWildcard(obj) { if (obj && obj.__esModule) { return obj; } else { var newObj = {}; if (obj != null) { for (var key in obj) { if (Object.prototype.hasOwnProperty.call(obj, key)) newObj[key] = obj[key]; } } newObj.default = obj; return newObj; } }
 
 /***/ }),
-/* 4 */
+/* 5 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -871,42 +424,12 @@ Object.defineProperty(exports, "__esModule", {
 });
 exports.MyTestComponent = exports.MyTitleComponent = undefined;
 
-var _myTitle = __webpack_require__(5);
+var _myTitle = __webpack_require__(6);
 
-var _myTest = __webpack_require__(13);
+var _myTest = __webpack_require__(18);
 
 exports.MyTitleComponent = _myTitle.MyTitleComponent;
 exports.MyTestComponent = _myTest.MyTestComponent;
-
-/***/ }),
-/* 5 */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-
-Object.defineProperty(exports, "__esModule", {
-	value: true
-});
-exports.MyTitleComponent = undefined;
-
-var _dec, _class;
-
-var _component = __webpack_require__(1);
-
-function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
-
-var MyTitleComponent = exports.MyTitleComponent = (_dec = (0, _component.Component)({
-	selector: 'my-title',
-	template: '<h1>The {{title}} Family</h1>',
-	styles: __webpack_require__(12),
-	attributes: ['title']
-	// styles: ':host > h1 { font-size: 11px; }'
-}), _dec(_class = function MyTitleComponent() {
-	_classCallCheck(this, MyTitleComponent);
-
-	this.title = this.getAttribute('title');
-}) || _class);
 
 /***/ }),
 /* 6 */
@@ -918,416 +441,860 @@ var MyTitleComponent = exports.MyTitleComponent = (_dec = (0, _component.Compone
 Object.defineProperty(exports, "__esModule", {
 	value: true
 });
-exports.extendComponent = extendComponent;
+exports.MyTitleComponent = undefined;
 
-var _templateParser = __webpack_require__(7);
+var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
 
-var _util = __webpack_require__(0);
+var _dec, _class;
 
-/** extend a component */
-/** get the html template parser */
-function extendComponent(component) {
-	/** public properties */
-	component.prototype.template = null;
-	component.prototype.styles = null;
-	component.prototype.componentEl = null;
+var _circularComponent = __webpack_require__(2);
 
-	/** public methods */
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
-	/** retrieve an attribute value */
-	component.prototype.getAttribute = function (attr) {
-		return this.componentEl.attributes.getNamedItem(attr).value;
-	};
+function _defineProperty(obj, key, value) { if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }
 
-	/** get the root of the element */
-	component.prototype.root = function () {
-		return this.componentEl.shadowRoot;
-	};
+var MyTitleComponent = exports.MyTitleComponent = (_dec = (0, _circularComponent.CircularComponent)(_defineProperty({
+	selector: 'my-title',
+	template: '<h1>The {{title}} Family</h1>',
+	styles: __webpack_require__(17),
+	attributes: ['title']
+}, 'styles', ':host > h1 { font-size: 11px; }')), _dec(_class = function () {
+	function MyTitleComponent() {
+		_classCallCheck(this, MyTitleComponent);
 
-	/** build the component html */
-	component.prototype.build = function () {
-		var html = (0, _templateParser.templateParser)(this);
-		this.root().innerHTML = html;
-	};
+		this.title = '';
+	}
 
-	/** empty the component */
-	component.prototype.empty = function () {
-		while (this.root().firstChild) {
-			this.root().removeChild(this.root().firstChild);
+	_createClass(MyTitleComponent, [{
+		key: 'testMethod',
+		value: function testMethod() {
+			alert('coming soon');
 		}
-	};
-}
+	}]);
+
+	return MyTitleComponent;
+}()) || _class);
 
 /***/ }),
 /* 7 */
-/***/ (function(module, exports, __webpack_require__) {
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
+Object.defineProperty(__webpack_exports__, "__esModule", { value: true });
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "Templation", function() { return Templation; });
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__classes_directive_container_class__ = __webpack_require__(8);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__classes_directive_class__ = __webpack_require__(0);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__classes_compiler_class__ = __webpack_require__(9);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_3__directives__ = __webpack_require__(12);
+/** import dependencies */
 
 
-Object.defineProperty(exports, "__esModule", {
-	value: true
-});
-exports.templateParser = templateParser;
 
-var _util = __webpack_require__(0);
 
-/** attributes we look for */
-var circularAttrs = {
-	'cr-for': '',
-	'cr-if': '',
-	'cr-class': '',
-	'cr-click': ''
-};
 
-function templateParser(component) {
-	/** search for circular attributes */
-	var container = document.createElement('template');
+/**
+ * @class Templation
+ * Initializes and configures the Templation engine
+ */
+class Templation {
+	constructor() {
+		/** public properties */
 
-	/** check for styles */
-	var innerHTML = '';
-	if (component.styles && component.styles !== null) innerHTML = '<style>' + component.styles + '</style>';
-	innerHTML += component.template;
+		/** @public {DirectiveContainer} The directive container */
+		this.directiveContainer = new __WEBPACK_IMPORTED_MODULE_0__classes_directive_container_class__["a" /* DirectiveContainer */]();
 
-	/** take a first pass at template value replacement */
-	innerHTML = firstPass(innerHTML, component);
-
-	/** set the container html */
-	container.innerHTML = innerHTML;
-
-	/** look for cr-for attributes */
-	var crFor = container.content.querySelector('[cr-for]');
-	if (crFor && crFor !== null) {
-		container.innerHTML = crForIterate(crFor, innerHTML, component);
+		/** add the built-in directives */
+		this.directiveContainer.addDirective(__WEBPACK_IMPORTED_MODULE_3__directives__["b" /* crForDirective */]);
+		this.directiveContainer.addDirective(__WEBPACK_IMPORTED_MODULE_3__directives__["c" /* crIfDirective */]);
+		this.directiveContainer.addDirective(__WEBPACK_IMPORTED_MODULE_3__directives__["a" /* crClassDirective */]);
+		this.directiveContainer.addDirective(__WEBPACK_IMPORTED_MODULE_3__directives__["d" /* crOnDirective */]);
 	}
 
-	/** return the component html */
-	return container.innerHTML;
-}
+	/** public methods */
 
-/** replace all component property values */
-function firstPass(html, component) {
-	/** get the component properties */
-	var properties = Object.keys(component);
+	/** create new compiler */
+	compile(container, template, data) {
+		/** create the compiler */
+		const compiler = new __WEBPACK_IMPORTED_MODULE_2__classes_compiler_class__["a" /* Compiler */](container, template, data);
+		compiler.setDirectiveContainer(this.directiveContainer);
 
-	/** replace property values */
-	properties.forEach(function (p) {
-		html = html.replace('{{' + p + '}}', component[p]);
-	});
-
-	/** return the html */
-	return html;
-}
-
-/** return a function that can do template parsing */
-function templater(html) {
-	return function (data) {
-		/** cycle through the data to place in template */
-		for (var x in data) {
-			var re = '{{\\s?' + x + '\\s?}}';
-			html = html.replace(new RegExp(re, 'ig'), data[x]);
-		}
-
-		/** return the new html */
-		return html;
-	};
-}
-
-/** iterate over items in cr-for */
-function crForIterate(crFor, html, component) {
-	/** get the cr-for attribute value expression */
-	var crForAttrVal = crFor.getAttribute('cr-for').split(' ');
-	var entityRef = crForAttrVal[0];
-	var entityProp = crForAttrVal[2];
-
-	/** cycle over the property */
-	var crForHTML = '';
-
-	/** check the entityProperty type */
-	if (Array.isArray(component[entityProp])) {
-		component[entityProp].forEach(function (row, i) {
-			/** add html for the iteration */
-			var rowHTML = crFor.cloneNode(true).outerHTML;
-
-			/** search the row properties */
-			var regex = new RegExp('{{' + entityRef + '.([\\w]*)}}?', 'gmi');
-			var m;
-			while ((m = regex.exec(rowHTML)) !== null) {
-				/** replace the properties */
-				rowHTML = rowHTML.replace(m[0], row[m[1]]);
-			}
-
-			/** add the html to the crForHtml */
-			crForHTML += rowHTML;
-		});
+		/** return the compiler */
+		return compiler;
 	}
-
-	/** replace the crFor element with the rows */
-	return html.replace(crFor.outerHTML, crForHTML);
 }
+
+/** export Templation */
+
 
 /***/ }),
 /* 8 */
-/***/ (function(module, exports) {
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
 
-var g;
+"use strict";
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "a", function() { return DirectiveContainer; });
+/**
+ * @class DirectiveContainer
+ * Contains all the defined Directives and allows for managing them
+ */
+class DirectiveContainer {
+	constructor() {
+		/** public properties */
 
-// This works in non-strict mode
-g = (function() {
-	return this;
-})();
+		/** @public {Directive[]} An array of Directive objects */
+		this.directives = [];
+	}
 
-try {
-	// This works if eval is allowed (see CSP)
-	g = g || Function("return this")() || (1,eval)("this");
-} catch(e) {
-	// This works if the window reference is available
-	if(typeof window === "object")
-		g = window;
+	/** public methods */
+
+	/**
+	 * Get the directives
+	 * @return {Directive[]}
+	 */
+	getDirectives() {
+		return this.directives;
+	}
+
+	/**
+	 * Get a specific directive
+	 * @return {Directive}
+	 */
+	getDirective(selector) {
+		/** find the directive */
+		let match = this.directives.find(dir => dir.selector === selector);
+		return match;
+	}
+
+	/**
+	 * Add a new directive
+	 * @param {Directive} directive A directive to add to the configured directives container
+	 * @return {DirectiveContainer}
+	 */
+	addDirective(directive) {
+		/** set the order and add to directives list */
+		directive.setOrder(this.directives.length);
+		this.directives.push(directive);
+		
+		/** return DirectiveContainer */
+		return this;
+	}
+
+	/**
+	 * Remove a directive
+	 * @param {string} selector A name of a directive to remove
+	 * @return {DirectiveContainer}
+	 */
+	removeDirective(selector) {
+		/** find the index of the directive */
+		let index = this.directives.findIndex(dir => dir.selector === selector);
+		if (index >= 0) this.directives.splice(index, 1);
+
+		/** return DirectiveContainer */
+		return this;
+	}
+
+	/**
+	 * Set the order of a directive
+	 * @param {string} selector A name of a directive to reorder
+	 * @return {DirectiveContainer}
+	 */
+	setDirectiveOrder(selector, order) {
+		/** find the matching directives */
+		let index = this.directives.findIndex(dir => dir.selector === selector);
+		if (index >= 0) {
+			/** set the order */
+			this.directives[index].setOrder(order);
+
+			/** add 1 to each directives over after this one */
+			this.directives.forEach((dir, i) => {
+				if (i > index) dir.setOrder(dir.getOrder() + 1);
+			});
+
+			/** sort the directives */
+			dirs.sort(function(a, b) {
+				return a.order - b.order;
+			});
+		}
+
+		/** return DirectiveContainer */
+		return this;
+	}
 }
 
-// g can still be undefined, but nothing to do about it...
-// We return undefined, instead of nothing here, so it's
-// easier to handle this case. if(!global) { ...}
-
-module.exports = g;
+/** export the DirectiveContainer */
 
 
 /***/ }),
 /* 9 */
-/***/ (function(module, exports) {
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
 
-// shim for using process in browser
-var process = module.exports = {};
-
-// cached from whatever global is present so that test runners that stub it
-// don't break things.  But we need to wrap it in a try catch in case it is
-// wrapped in strict mode code which doesn't define any globals.  It's inside a
-// function because try/catches deoptimize in certain engines.
-
-var cachedSetTimeout;
-var cachedClearTimeout;
-
-function defaultSetTimout() {
-    throw new Error('setTimeout has not been defined');
-}
-function defaultClearTimeout () {
-    throw new Error('clearTimeout has not been defined');
-}
-(function () {
-    try {
-        if (typeof setTimeout === 'function') {
-            cachedSetTimeout = setTimeout;
-        } else {
-            cachedSetTimeout = defaultSetTimout;
-        }
-    } catch (e) {
-        cachedSetTimeout = defaultSetTimout;
-    }
-    try {
-        if (typeof clearTimeout === 'function') {
-            cachedClearTimeout = clearTimeout;
-        } else {
-            cachedClearTimeout = defaultClearTimeout;
-        }
-    } catch (e) {
-        cachedClearTimeout = defaultClearTimeout;
-    }
-} ())
-function runTimeout(fun) {
-    if (cachedSetTimeout === setTimeout) {
-        //normal enviroments in sane situations
-        return setTimeout(fun, 0);
-    }
-    // if setTimeout wasn't available but was latter defined
-    if ((cachedSetTimeout === defaultSetTimout || !cachedSetTimeout) && setTimeout) {
-        cachedSetTimeout = setTimeout;
-        return setTimeout(fun, 0);
-    }
-    try {
-        // when when somebody has screwed with setTimeout but no I.E. maddness
-        return cachedSetTimeout(fun, 0);
-    } catch(e){
-        try {
-            // When we are in I.E. but the script has been evaled so I.E. doesn't trust the global object when called normally
-            return cachedSetTimeout.call(null, fun, 0);
-        } catch(e){
-            // same as above but when it's a version of I.E. that must have the global object for 'this', hopfully our context correct otherwise it will throw a global error
-            return cachedSetTimeout.call(this, fun, 0);
-        }
-    }
-
-
-}
-function runClearTimeout(marker) {
-    if (cachedClearTimeout === clearTimeout) {
-        //normal enviroments in sane situations
-        return clearTimeout(marker);
-    }
-    // if clearTimeout wasn't available but was latter defined
-    if ((cachedClearTimeout === defaultClearTimeout || !cachedClearTimeout) && clearTimeout) {
-        cachedClearTimeout = clearTimeout;
-        return clearTimeout(marker);
-    }
-    try {
-        // when when somebody has screwed with setTimeout but no I.E. maddness
-        return cachedClearTimeout(marker);
-    } catch (e){
-        try {
-            // When we are in I.E. but the script has been evaled so I.E. doesn't  trust the global object when called normally
-            return cachedClearTimeout.call(null, marker);
-        } catch (e){
-            // same as above but when it's a version of I.E. that must have the global object for 'this', hopfully our context correct otherwise it will throw a global error.
-            // Some versions of I.E. have different rules for clearTimeout vs setTimeout
-            return cachedClearTimeout.call(this, marker);
-        }
-    }
+"use strict";
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "a", function() { return Compiler; });
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__observer_class__ = __webpack_require__(10);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__functions_dom_functions__ = __webpack_require__(11);
+/** import dependencies */
 
 
 
-}
-var queue = [];
-var draining = false;
-var currentQueue;
-var queueIndex = -1;
+/**
+ * @class Compiler
+ * Compile the given template and push into the container
+ * @param {string | element} container The container for the compiled html
+ * @param {string | element} template The template to use for compilation
+ * @param {object} data The object used for binding data and methods
+ */
+class Compiler {
+	constructor(container, template, data) {
+		/** check container for string id, or element */
+		if (typeof container === 'string') container = document.getElementById(container);
+	
+		/** check template for string id, or element */
+		if (typeof template === 'string') template = document.getElementById(template);
+	
+		/** check the template for one and only one child */
+		if (template.nodeName !== 'TEMPLATE') throw 'The template should be a template element (<template>)';
+		if (template.content.children.length !== 1) throw 'The template must contain one root element.';
 
-function cleanUpNextTick() {
-    if (!draining || !currentQueue) {
-        return;
-    }
-    draining = false;
-    if (currentQueue.length) {
-        queue = currentQueue.concat(queue);
-    } else {
-        queueIndex = -1;
-    }
-    if (queue.length) {
-        drainQueue();
-    }
+		/** public properties */
+
+		/** @public {element} The container element */
+		this.container = container;
+	
+		/** @public {element} The template element */
+		this.template = template;
+	
+		/** @public {object} The data object that is used for binding data values and methods */
+		this.data = data;
+
+		/** private properties */
+
+		/** @private {boolean} A boolean indicating whether compilation has been initiated once */
+		let _initd = false;
+		this.setInitd = (initd) => {
+			_initd = initd;
+			return this;
+		};
+		this.initd = () => { return _initd; };
+
+		/** @private {Observer} An instance of Observer that is watching data for us */
+		let _observer = new __WEBPACK_IMPORTED_MODULE_0__observer_class__["a" /* Observer */](this.data, this.render, this)
+		this.getObserver = () => { return _observer; };
+
+		/** @private {DirectiveContainer} The DirectiveContainer object */
+		let _directiveContainer = null;
+		this.setDirectiveContainer = (directiveContainer) => { _directiveContainer = directiveContainer; };
+		this.getDirectiveContainer = () => { return _directiveContainer; };
+
+		/** empty the container */
+		Object(__WEBPACK_IMPORTED_MODULE_1__functions_dom_functions__["b" /* emptyElement */])(this.container);
+	}
+
+	/** public methods */
+
+	/** render out the processed template */
+	render() {
+		/** get the template and inner html */
+		const tempDOM = Object(__WEBPACK_IMPORTED_MODULE_1__functions_dom_functions__["a" /* createTemporaryDOM */])(this.template, this.data, this.getDirectiveContainer().getDirectives());
+
+		/** set the app */
+		Object(__WEBPACK_IMPORTED_MODULE_1__functions_dom_functions__["d" /* updateDOM */])(this.container, Object(__WEBPACK_IMPORTED_MODULE_1__functions_dom_functions__["e" /* virtualizeDOM */])(tempDOM.content.children[0]), this.initd() ? Object(__WEBPACK_IMPORTED_MODULE_1__functions_dom_functions__["e" /* virtualizeDOM */])(this.container.children[0]) : undefined);
+		
+		/** cycle through post directives */
+		Object(__WEBPACK_IMPORTED_MODULE_1__functions_dom_functions__["c" /* parseDirectives */])(this.getDirectiveContainer().getDirectives().filter(dir => dir.isPost()), this.container, this.data);
+
+		/** set initd to true */
+		this.setInitd(true);
+	}
 }
 
-function drainQueue() {
-    if (draining) {
-        return;
-    }
-    var timeout = runTimeout(cleanUpNextTick);
-    draining = true;
-
-    var len = queue.length;
-    while(len) {
-        currentQueue = queue;
-        queue = [];
-        while (++queueIndex < len) {
-            if (currentQueue) {
-                currentQueue[queueIndex].run();
-            }
-        }
-        queueIndex = -1;
-        len = queue.length;
-    }
-    currentQueue = null;
-    draining = false;
-    runClearTimeout(timeout);
-}
-
-process.nextTick = function (fun) {
-    var args = new Array(arguments.length - 1);
-    if (arguments.length > 1) {
-        for (var i = 1; i < arguments.length; i++) {
-            args[i - 1] = arguments[i];
-        }
-    }
-    queue.push(new Item(fun, args));
-    if (queue.length === 1 && !draining) {
-        runTimeout(drainQueue);
-    }
-};
-
-// v8 likes predictible objects
-function Item(fun, array) {
-    this.fun = fun;
-    this.array = array;
-}
-Item.prototype.run = function () {
-    this.fun.apply(null, this.array);
-};
-process.title = 'browser';
-process.browser = true;
-process.env = {};
-process.argv = [];
-process.version = ''; // empty string to avoid regexp issues
-process.versions = {};
-
-function noop() {}
-
-process.on = noop;
-process.addListener = noop;
-process.once = noop;
-process.off = noop;
-process.removeListener = noop;
-process.removeAllListeners = noop;
-process.emit = noop;
-process.prependListener = noop;
-process.prependOnceListener = noop;
-
-process.listeners = function (name) { return [] }
-
-process.binding = function (name) {
-    throw new Error('process.binding is not supported');
-};
-
-process.cwd = function () { return '/' };
-process.chdir = function (dir) {
-    throw new Error('process.chdir is not supported');
-};
-process.umask = function() { return 0; };
+/** export Compiler */
 
 
 /***/ }),
 /* 10 */
-/***/ (function(module, exports) {
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
 
-module.exports = function isBuffer(arg) {
-  return arg && typeof arg === 'object'
-    && typeof arg.copy === 'function'
-    && typeof arg.fill === 'function'
-    && typeof arg.readUInt8 === 'function';
+"use strict";
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "a", function() { return Observer; });
+/**
+ * @class Observer
+ * Recursively observes every property on an object
+ * @param {object} obj The object to setup observance on
+ * @param {function} callback The callback function to execute when the data has changed
+ */
+class Observer {
+	constructor(obj, callback, compiler) {
+		/** public properties */
+
+		/** @public {object} The obj to observe */
+		this.obj = obj;
+
+		/** @public {function} The callback function to execute when the obj has changed */
+		this.callback = callback.bind(compiler);
+	
+		/** start observing */
+		this.observe(this.obj);
+	}
+
+	/**
+	 * @method Setup data observation on an object
+	 * @param {object} An object to observe
+	 * @returns {Directive}
+	 */
+	observe(obj) {
+		/** check for array and observe */
+		if (Array.isArray(obj) && !obj.hasOwnProperty('push')) this.observeArray(obj);
+
+		/** for every property on the object setup observance */
+		for (let prop in obj) {
+			this.observeProp(obj, prop);
+			if (typeof obj[prop] === 'object') {
+				this.observe(obj[prop]);
+			}
+		}
+	}
+
+	/** observe the value of a property on an object */
+	observeProp(obj, prop) {
+		/** get a reference to this */
+		let self = this;
+
+		/** create getter / setter for firing callback on change */
+		let value = obj[prop];
+		Object.defineProperty(obj, prop, {
+			get () {
+				return value;
+			},
+			set (newValue) {
+				/** set the value to the new value */
+				value = newValue;
+
+				/** setup observance */
+				if (typeof value === 'object') self.observe(value);
+
+				/** fire callback */
+				self.callback();
+			}
+		});
+	}
+
+	/** observe an array for changes */
+	observeArray(arrayObj) {
+		/** get a reference to this */
+		let self = this;
+		
+		/** overwrite array methods */
+		const arrayMethods = ['push', 'pop', 'shift', 'unshift', 'splice'];
+		arrayMethods.forEach(m => {
+			const _method = Array.prototype[m];
+			Object.defineProperty(arrayObj, m, {
+				configurable: false,
+				enumerable: false,
+				writable: false,
+				value: function () {
+					/** get the result of the base array function */
+					let result = _method.apply(this, arguments);
+
+					/** setup observance on the new value */
+					self.observe(this);
+
+					/** fire callback */
+					self.callback();
+
+					/** return the result */
+					return result;
+				}
+			});
+		});
+	}
 }
+
+/** export the class */
+
 
 /***/ }),
 /* 11 */
-/***/ (function(module, exports) {
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
 
-if (typeof Object.create === 'function') {
-  // implementation from standard node.js 'util' module
-  module.exports = function inherits(ctor, superCtor) {
-    ctor.super_ = superCtor
-    ctor.prototype = Object.create(superCtor.prototype, {
-      constructor: {
-        value: ctor,
-        enumerable: false,
-        writable: true,
-        configurable: true
-      }
-    });
-  };
-} else {
-  // old school shim for old browsers
-  module.exports = function inherits(ctor, superCtor) {
-    ctor.super_ = superCtor
-    var TempCtor = function () {}
-    TempCtor.prototype = superCtor.prototype
-    ctor.prototype = new TempCtor()
-    ctor.prototype.constructor = ctor
-  }
+"use strict";
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "a", function() { return createTemporaryDOM; });
+/* unused harmony export templater */
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "e", function() { return virtualizeDOM; });
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "d", function() { return updateDOM; });
+/* unused harmony export hasChanged */
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "c", function() { return parseDirectives; });
+/* unused harmony export createElement */
+/* unused harmony export isEventProp */
+/* unused harmony export setProp */
+/* unused harmony export setProps */
+/* unused harmony export removeProp */
+/* unused harmony export updateProps */
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "b", function() { return emptyElement; });
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__using_function__ = __webpack_require__(1);
+/** import functions */
+
+
+/** create a temporary DOM object based on the template */
+function createTemporaryDOM(template, data, directives) {
+	/** create new template */
+	let tempDOM = template.cloneNode(true);
+
+	/** cycle through pre directives */
+	parseDirectives(directives.filter(dir => dir.isPre()), tempDOM.content, data);
+
+	/** replace simple template values */
+	templater(tempDOM, data);
+
+	/** return the virtual DOM */
+	return tempDOM;
 }
+
+/** return a function that can do template parsing */
+function templater(template, data) {
+	/** get the html */
+	let html = template.innerHTML;
+
+	/** set the pattern for replacement */
+	const re = /{{\s?([\w\W]*?)\s?}}/gmi;
+
+	/** cycle over matches */
+	let match;
+	while ((match = re.exec(html)) !== null) {
+		/** catch exceptions */
+		try {
+			/** replace the values in the html and reset the lastIndex of the regex */
+			html = html.replace(match[0], Object(__WEBPACK_IMPORTED_MODULE_0__using_function__["a" /* using */])(data, match[1]));
+			re.lastIndex = 0;
+		} catch (ex) {
+			console.log(ex);
+		}
+	}
+
+	/** reset the innerHTML */
+	template.innerHTML = html;
+}
+
+/** virtualize the passed DOM element */
+function virtualizeDOM(element) {
+	let vElement = { type: element.nodeName, props: [], children: [], value: '' };
+	if (['#text', '#comment'].includes(element.nodeName)) vElement.value = element.nodeValue;
+
+	if (element.attributes) {
+		for (let i = 0; i < element.attributes.length; i++) {
+			let a = element.attributes[i];
+			vElement.props.push({ 'name': a.name, 'value': a.value });
+		}
+	}
+
+	if (element.childNodes) {
+		element.childNodes.forEach(c => {
+			vElement.children.push(virtualizeDOM(c));
+		});
+	}
+
+	return vElement;
+}
+
+/** update the given parent with new virtual DOM nodes */
+function updateDOM(parent, newNode, oldNode, index) {
+	if (!index) index = 0;
+
+	if (!oldNode) {
+		if (newNode) {
+			let newDOMNode = createElement(newNode);
+			parent.appendChild(newDOMNode);
+		}
+	} else if (!newNode) {
+		parent.removeChild(parent.childNodes[index]);
+	} else if (hasChanged(newNode, oldNode)) {
+		let newDOMNode = createElement(newNode);
+		parent.replaceChild(newDOMNode, parent.childNodes[index]);
+	} else if (newNode.type) {
+		updateProps(parent.childNodes[index], newNode.props, oldNode.props);
+
+		const newLength = newNode.children.length;
+		const oldLength = oldNode.children.length;
+		
+		/** check for less new than old */
+		if (newLength < oldLength) {
+			/** get all the old elements that are past the new */
+			let children = [];
+			for (let i = newLength; i < oldLength; i++) {
+				children.push(parent.childNodes[index].childNodes[i]);
+			}
+
+			/** remove old elements */
+			children.forEach(c => parent.childNodes[index].removeChild(c));
+		}
+
+		/** compare all new nodes */
+		for (let i = 0; i < newLength; i++) {
+			updateDOM(parent.childNodes[index], newNode.children[i], oldNode.children[i], i);
+		}
+	}
+}
+
+/** check to see if has changed */
+function hasChanged(node1, node2) {
+	return (typeof node1 !== typeof node2) || (node1.type !== node2.type) || (['#text', '#comment'].includes(node1.type) && node1.value !== node2.value);
+}
+
+/** find references to the given directives on the given element and parse */
+function parseDirectives(dirs, element, data) {
+	/** sort the directives */
+	dirs.sort(function(a, b) {
+		return a.order - b.order;
+	});
+
+	/** execute each directive */
+	dirs.forEach(dir => {
+		/** create an array of selectors */
+		let selectors = [];
+
+		/** check for sub selectors */
+		if (dir.subSelectors.length > 0) {
+			/** cycle thru sub selectors */
+			dir.subSelectors.forEach(ss => {
+				/** add the selector with sub selector */
+				selectors.push(`${dir.selector}\\:${ss}`);
+			});
+		} else {
+			/** add the single selector */
+			selectors.push(dir.selector);
+		}
+
+		/** cycle through selectors */
+		selectors.forEach(selector => {
+			/** initialize the directive elements */
+			let directiveElement;
+			while ((directiveElement = element.querySelector(`[${selector}]`)) !== null) {
+				let details = getDirectiveDetails(directiveElement, dir, selector);
+				dir.parser(details, directiveElement, data);
+			}
+		});
+	});
+}
+
+/** get the attribute name (selector), sub selector, and value of a directive */
+function getDirectiveDetails(element, directive, selector) {
+	/** initialize the details */
+	let details = { 'value': null, 'subSelector': null };
+
+	/** get the selector */
+	selector = selector.replace('\\', '');
+	if (directive.isPost()) selector = selector.toLowerCase();
+
+	/** get the attribute value expression, and remove the attribute */
+	var attrVal = element.getAttribute(selector);
+	element.removeAttribute(selector);
+
+	/** set details */
+	details.value = attrVal;
+
+	/** check for sub selector */
+	if (selector.includes(':')) details.subSelector = selector.split(':')[1];
+
+	/** return the details */
+	return details;
+}
+
+/** create a DOM element based on the virtual DOM node passed */
+function createElement(node) {
+	if (node.type === '#text') {
+		return document.createTextNode(node.value);
+	}
+	if (node.type === '#comment') {
+		return document.createComment(node.value);
+	}
+	const $el = document.createElement(node.type);
+	setProps($el, node.props);
+	node.children.map(createElement).forEach($el.appendChild.bind($el));
+	return $el;
+}
+
+/** check this property to see if it is an event property */
+function isEventProp(prop) {
+	return /^cron:/.test(prop.name);
+}
+
+/** set a target element's property value */
+function setProp(target, prop) {
+	target.setAttribute(prop.name, prop.value);
+}
+
+/** set multiple property values on a target element */
+function setProps(target, props) {
+	props.forEach(prop => {
+		setProp(target, prop);
+	});
+}
+
+/** remove a property from a target element */
+function removeProp(target, prop) {
+	target.removeAttribute(prop.name);
+}
+
+/** update the properties on a target element */
+function updateProps(target, newProps, oldProps) {
+	newProps.forEach(prop => {
+		let match = oldProps.find(p => p.name === prop.name);
+		if (match) {
+			if (match.value !== prop.value) setProp(target, prop); // update
+		} else {
+			if (!isEventProp(prop)) {
+				setProp(target, prop); // add new
+			}
+		}
+	});
+	oldProps.forEach(prop => {
+		let match = newProps.find(p => p.name === prop.name);
+		if (!match) {
+			removeProp(target, prop);
+		}
+	});
+}
+
+/** empty an element of all children */
+function emptyElement(element) {
+	while (element.firstChild) element.removeChild(element.firstChild);
+};
+
+/** export the DOM related functions */
 
 
 /***/ }),
 /* 12 */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__crfor_directive__ = __webpack_require__(13);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__crif_directive__ = __webpack_require__(14);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__crclass_directive__ = __webpack_require__(15);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_3__cron_directive__ = __webpack_require__(16);
+/* harmony reexport (binding) */ __webpack_require__.d(__webpack_exports__, "b", function() { return __WEBPACK_IMPORTED_MODULE_0__crfor_directive__["a"]; });
+/* harmony reexport (binding) */ __webpack_require__.d(__webpack_exports__, "c", function() { return __WEBPACK_IMPORTED_MODULE_1__crif_directive__["a"]; });
+/* harmony reexport (binding) */ __webpack_require__.d(__webpack_exports__, "a", function() { return __WEBPACK_IMPORTED_MODULE_2__crclass_directive__["a"]; });
+/* harmony reexport (binding) */ __webpack_require__.d(__webpack_exports__, "d", function() { return __WEBPACK_IMPORTED_MODULE_3__cron_directive__["a"]; });
+/** import directives */
+
+
+
+
+
+/** re-export */
+
+
+/***/ }),
+/* 13 */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "a", function() { return crForDirective; });
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__classes_directive_class__ = __webpack_require__(0);
+/** import dependencies */
+
+
+/** create the directive */
+const crForDirective = new __WEBPACK_IMPORTED_MODULE_0__classes_directive_class__["a" /* Directive */]('crFor', forIterator);
+
+/** export the directive */
+
+
+/** define the directive parser function */
+function forIterator(details, forElement, data) {
+	/** get the for attribute value expression */
+	var forAttrVal = details.value.split(' ');
+	var entityRef = forAttrVal[0];
+	var entityProp = forAttrVal[2];
+
+	/** cycle over the property */
+	var forHTML = '';
+
+	let getDataProperty = new Function('obj', `
+		return (obj.${entityProp});
+	`);
+
+	/** check the entityProperty type */
+	let dataProperty = getDataProperty(data);
+	if (Array.isArray(dataProperty)) {
+		dataProperty.forEach((row, i) => {
+			/** add html for the iteration */
+			var rowEl = forElement.cloneNode(true);
+			var rowHTML = rowEl.outerHTML;
+
+			/** get the row properties */
+			let rowProps = Object.getOwnPropertyNames(row);
+			if (rowProps.length > 0) {
+				rowProps.forEach(p => {
+					rowHTML = rowHTML.replace(`${entityRef}.`, `${entityProp}[${i}].`);
+				});
+			}
+			
+			/** create regular expression to match the entityRef */
+			let re = new RegExp(`([^\\w])(${entityRef}\\b)([^\\w])`, 'gmi'); // /([^\w])(n\b)([^/w])/gmi
+			let match;
+			while ((match = re.exec(rowHTML)) !== null) {
+				try {
+					let replacement = `${match[1]}${entityProp}[${i}]${match[3]}`;
+					rowHTML = rowHTML.replace(match[0], replacement);
+				} catch (ex) {
+					console.log(ex);
+				}
+			}
+			
+			/** add the html to the crForHtml */
+			forHTML += rowHTML;
+		});
+	}
+
+	/** replace the forElements html */
+	forElement.outerHTML = forHTML;
+}
+
+/***/ }),
+/* 14 */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "a", function() { return crIfDirective; });
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__classes_directive_class__ = __webpack_require__(0);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__functions_using_function__ = __webpack_require__(1);
+/** import dependencies */
+
+
+
+/** create the directive */
+const crIfDirective = new __WEBPACK_IMPORTED_MODULE_0__classes_directive_class__["a" /* Directive */]('crIf', ifCheck);
+
+/** export the directive */
+
+
+/** define the directive parser function */
+function ifCheck(details, ifElement, data) {
+	/** evaluate the expression */
+	if (Object(__WEBPACK_IMPORTED_MODULE_1__functions_using_function__["a" /* using */])(data, details.value) === false) {
+		ifElement.parentNode.removeChild(ifElement);
+	}
+}
+
+/***/ }),
+/* 15 */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "a", function() { return crClassDirective; });
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__classes_directive_class__ = __webpack_require__(0);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__functions_using_function__ = __webpack_require__(1);
+/** import dependencies */
+
+
+
+/** create the directive */
+const crClassDirective = new __WEBPACK_IMPORTED_MODULE_0__classes_directive_class__["a" /* Directive */]('crClass', classCheck);
+
+/** export the directive */
+
+
+/** define the directive parser function */
+function classCheck(details, classElement, data) {
+	/** get the current class list */
+	let classList = [];
+	for (var i = 0; i < classElement.classList.length; i++) {
+		classList.push(classElement.classList[i]);
+	}
+
+	/** evaluate the expression */
+	let classObj = Object(__WEBPACK_IMPORTED_MODULE_1__functions_using_function__["a" /* using */])(data, details.value);
+	
+	/** create internal class check function */
+	const hasClass = (className) => {
+		return classList.includes(className);
+	};
+
+	/** add/remove classes */
+	Object.keys(classObj).forEach(key => {
+		/** check if the class is true */
+		if (classObj[key] === true) {
+			if (!hasClass(key)) classList.push(key);
+		} else {
+			if (hasClass(key)) classList.splice(classList.indexOf(key), 1);
+		}
+	});
+
+	/** reset the class list */
+	classElement.classList = classList.join(' ');
+}
+
+/***/ }),
+/* 16 */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "a", function() { return crOnDirective; });
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__classes_directive_class__ = __webpack_require__(0);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__functions_using_function__ = __webpack_require__(1);
+/** import dependencies */
+
+
+
+/** an array of event names to look for in the crOn event directive */
+const eventTypes = [
+	/** mouse events */
+	'click', 'contextmenu', 'dblclick', 'mousedown', 'mouseenter', 'mouseleave', 'mousemove', 'mouseover', 'mouseout', 'mouseup',
+	
+	/** keyboard events */
+	'keydown', 'keypress', 'keyup',
+	
+	/** frame / object events */
+	'abort', 'beforeunload', 'error', 'hashchange', 'load', 'pageshow', 'pagehide', 'resize', 'scroll', 'unload',
+	
+	/** form events */
+	'blur', 'change', 'focus', 'focusin', 'focusout', 'input', 'invalid', 'reset', 'search', 'select', 'submit',
+	
+	/** drag events */
+	'drag', 'dragend', 'dragenter', 'dragleave', 'dragover', 'dragstart', 'drop',
+	
+	/** clipboard events */
+	'copy', 'cut', 'paste',
+	
+	/** print events */
+	'afterprint', 'beforeprint',
+	
+	/** media events */
+	'abort', 'canplay', 'canplaythrough', 'durationchange', 'emptied', 'ended', 'error', 'loadeddata', 'loadedmetadata', 'loadstart', 'pause', 'play', 'playing', 'progress', 'ratechange', 'seeked', 'seeking', 'stalled', 'suspend', 'timeupdate', 'volumechange', 'waiting',
+	
+	/** misc events */
+	'online', 'offline', 'wheel',
+
+	/** touch events */
+	'touchcancel', 'touchend', 'touchmove', 'touchstart'
+];
+
+/** create the directive */
+const crOnDirective = new __WEBPACK_IMPORTED_MODULE_0__classes_directive_class__["a" /* Directive */]('crOn', eventAttach)
+	.setSubSelectors(eventTypes)
+	.setPre(false)
+	.setPost(true)
+
+/** export the directive */
+
+
+/** define the directive parser function */
+function eventAttach(details, element, data) {
+	/** create the event function */
+	let eventFunc = function() {
+		return Object(__WEBPACK_IMPORTED_MODULE_1__functions_using_function__["a" /* using */])(data, details.value);
+	};
+
+	/** remove and re-add the event listener */
+	element.removeEventListener(details.subSelector, eventFunc);
+	element.addEventListener(details.subSelector, eventFunc);
+}
+
+/***/ }),
+/* 17 */
 /***/ (function(module, exports, __webpack_require__) {
 
-exports = module.exports = __webpack_require__(2)(undefined);
+exports = module.exports = __webpack_require__(3)(undefined);
 // imports
 
 
@@ -1338,7 +1305,7 @@ exports.push([module.i, ":host h1 {\n  margin: 5px 0px;\n  padding: 0px; }\n", "
 
 
 /***/ }),
-/* 13 */
+/* 18 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -1349,36 +1316,55 @@ Object.defineProperty(exports, "__esModule", {
 });
 exports.MyTestComponent = undefined;
 
+var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
+
 var _dec, _class;
 
-var _component = __webpack_require__(1);
+var _circularComponent = __webpack_require__(2);
 
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
-var MyTestComponent = exports.MyTestComponent = (_dec = (0, _component.Component)({
+var MyTestComponent = exports.MyTestComponent = (_dec = (0, _circularComponent.CircularComponent)({
 	selector: 'my-test',
-	template: __webpack_require__(14),
-	styles: __webpack_require__(15),
+	template: __webpack_require__(19),
+	styles: __webpack_require__(20),
 	attributes: ['name']
-}), _dec(_class = function MyTestComponent() {
-	_classCallCheck(this, MyTestComponent);
+}), _dec(_class = function () {
+	function MyTestComponent() {
+		_classCallCheck(this, MyTestComponent);
 
-	/** public properties */
-	this.name = this.getAttribute('name');
-	this.data = [{ 'id': 0, 'name': 'John Doe', age: 38, selected: true }, { 'id': 1, 'name': 'Jane Doe', age: 38, selected: true }, { 'id': 2, 'name': 'Billy Doe', age: 14, selected: true }, { 'id': 3, 'name': 'Samantha Doe', age: 12, selected: true }, { 'id': 4, 'name': 'Jeremiah Doe', age: 11, selected: true }, { 'id': 5, 'name': 'Susie Doe', age: 9, selected: true }, { 'id': 6, 'name': 'Ezekiel Doe', age: 7, selected: true }, { 'id': 7, 'name': 'Molly Doe', age: 6, selected: true }];
-}) || _class);
+		/** public properties */
+		this.name = '';
+		this.data = [{ 'id': 0, 'name': 'John Doe', age: 38, selected: true }, { 'id': 1, 'name': 'Jane Doe', age: 38, selected: true }, { 'id': 2, 'name': 'Billy Doe', age: 14, selected: true }, { 'id': 3, 'name': 'Samantha Doe', age: 12, selected: true }, { 'id': 4, 'name': 'Jeremiah Doe', age: 11, selected: true }, { 'id': 5, 'name': 'Susie Doe', age: 9, selected: true }, { 'id': 6, 'name': 'Ezekiel Doe', age: 7, selected: true }, { 'id': 7, 'name': 'Molly Doe', age: 6, selected: true }];
+	}
+
+	_createClass(MyTestComponent, [{
+		key: 'changeValue',
+		value: function changeValue() {
+			var name = prompt('Enter A Name');
+			this.data[0].name = name;
+		}
+	}, {
+		key: 'addValue',
+		value: function addValue() {
+			alert('Test');
+		}
+	}]);
+
+	return MyTestComponent;
+}()) || _class);
 
 /***/ }),
-/* 14 */
+/* 19 */
 /***/ (function(module, exports) {
 
-module.exports = "<slot></slot> <div cr-for=\"d in data\"> Hello! My name is {{d.name}} and I am {{d.age}} years old. </div>";
+module.exports = "<div> <slot></slot> <div crfor=\"d in data\"> Hello! My name is {{d.name}} and I am {{d.age}} years old. </div> <button cron:click=changeValue()> Update </button> </div>";
 
 /***/ }),
-/* 15 */
+/* 20 */
 /***/ (function(module, exports, __webpack_require__) {
 
-exports = module.exports = __webpack_require__(2)(undefined);
+exports = module.exports = __webpack_require__(3)(undefined);
 // imports
 
 
