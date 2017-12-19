@@ -5,7 +5,8 @@ import { CircularComponent } from '../../../src/decorators/circular-component.de
 	template: `<h1>The {{title}} Family</h1>`,
 	styleUrl: './my-title.component.scss',
 	attributes: ['title'],
-	styles: ':host > h1 { font-size: 11px; }'
+	//styles: ':host > h1 { font-size: 11px; }'
+	styleUrl: './my-title.component.scss',
 })
 export class MyTitleComponent {
 	constructor() {
