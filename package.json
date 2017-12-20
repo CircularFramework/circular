@@ -11,7 +11,7 @@
 	"author": "",
 	"license": "MIT",
 	"dependencies": {
-		"@circular/templation": "^1.0.5"
+		"@circular/templation": "^1.0.6"
 	},
 	"devDependencies": {
 		"babel-core": "^6.26.0",
