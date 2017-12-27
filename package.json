@@ -6,8 +6,16 @@
 	"scripts": {
 		"build:example": "webpack -p --progress"
 	},
-	"author": "",
+	"repository": {
+		"type": "git",
+		"url": "git+https://github.com/CircularFramework/components.git"
+	},
+	"author": "Rick Hopkins <rick.hopkins@gmail.com>",
 	"license": "MIT",
+	"bugs": {
+		"url": "https://github.com/CircularFramework/components/issues"
+	},
+	"homepage": "https://github.com/CircularFramework/components.git#readme",
 	"dependencies": {
 		"@circular/templation": "^1.0.12"
 	},
