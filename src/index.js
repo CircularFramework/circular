@@ -1,0 +1,1 @@
+export { CircularComponent } from './decorators/circular-component.decorator';

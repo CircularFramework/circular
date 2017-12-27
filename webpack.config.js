@@ -2,9 +2,9 @@ var path = require('path');
 var webpack = require('webpack');
 
 module.exports = {
-	entry: './app/app.js',
+	entry: './example/app/app.js',
 	output: {
-		filename: './index.js'
+		filename: './example/index.js'
 	},
 	devtool: 'source-map',
 	module: {
@@ -13,7 +13,7 @@ module.exports = {
 				test: /\.js$/,
 				use: [
 					{ loader: 'babel-loader' },
-					{ loader: 'component-loader' }
+					{ loader: 'circular-loader' }
 				],
 				exclude: /node_modules/
 			},
@@ -43,7 +43,7 @@ module.exports = {
 	},
 	resolveLoader: {
 		alias: {
-			'component-loader': path.join(__dirname, 'src/webpack', 'component-loader.js')
+			'circular-loader': path.join(__dirname, 'webpack', 'circular-loader.js')
 		}
 	},
 	resolve: {
