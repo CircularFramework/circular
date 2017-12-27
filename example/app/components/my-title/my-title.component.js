@@ -1,4 +1,4 @@
-import { CircularComponent } from '../../../../lib/decorators/circular-component.decorator';
+import { CircularComponent } from '../../../../src/decorators/circular-component.decorator';
 
 @CircularComponent({
 	selector: 'my-title',

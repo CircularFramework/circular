@@ -1,1 +1,0 @@
-{"version":3,"sources":["../src/index.js"],"names":["CircularComponent"],"mappings":";;;;;;;;;;;8BAASA,iB","file":"index.js","sourcesContent":["export { CircularComponent } from './decorators/circular-component.decorator';"]}
