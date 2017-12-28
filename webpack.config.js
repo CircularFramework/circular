@@ -43,7 +43,7 @@ module.exports = {
 	},
 	resolveLoader: {
 		alias: {
-			'circular-loader': path.join(__dirname, 'src/webpack', 'circular-loader.js')
+			'circular-loader': path.join(__dirname, 'lib/webpack', 'circular-loader.js')
 		}
 	},
 	resolve: {

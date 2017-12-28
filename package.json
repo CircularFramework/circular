@@ -1,10 +1,11 @@
 {
 	"name": "@circular/components",
-	"version": "1.0.0",
+	"version": "1.0.1",
 	"description": "",
-	"main": "src/index.js",
+	"main": "lib/index.js",
 	"scripts": {
-		"build:example": "webpack -p --progress"
+		"build:example": "webpack -p --progress",
+		"build:lib": "babel src -d lib --source-maps"
 	},
 	"repository": {
 		"type": "git",
@@ -17,7 +18,7 @@
 	},
 	"homepage": "https://github.com/CircularFramework/components.git#readme",
 	"dependencies": {
-		"@circular/templation": "^1.0.12"
+		"@circular/templation": "^1.0.15"
 	},
 	"devDependencies": {
 		"babel-cli": "^6.26.0",
